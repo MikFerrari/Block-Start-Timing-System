@@ -3,7 +3,7 @@
 #include <LiquidCrystal.h>
 
 // Variable declarations
-SoftwareSerial HC12(2, 3); // HC-12 TX Pin, HC-12 RX Pin
+SoftwareSerial HC12(3, 5); // HC-12 TX Pin, HC-12 RX Pin
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 const int blockPin = 6;
@@ -30,14 +30,14 @@ void setup() {
 
 void loop() {
   // Read block status to determine if the athlete is ready to start
-  blockStatus = digitalRead(blockPin);
+  blockStatus = digitalRead(blockPin); // Normally closed signal
 
-  if(blockStatus == 0) {
+  if(blockStatus == LOW) {
     athleteReady = true;
   }
 
-  if(athleteReady == true && blockStatus == 1) {
-    HC12.write("start");
+  if(athleteReady == true && blockStatus == HIGH) {
+    HC12.write("s");
     athleteReady = false;
     athleteRunning = true;  
   }
@@ -45,15 +45,15 @@ void loop() {
   // Receive total elapsed time measured by the slave
   while(HC12.available()) {
     totalTime = HC12.read();
-    Serial.write(totalTime); // For debugging
+    Serial.println(totalTime); // For debugging
     athleteRunning = false;
   }
 
   // Print time on LCD Display  
-  lcd.setCursor(0, 0); // Time computed by the master board
+  lcd.setCursor(0, 0);
   lcd.print("Total time [s]:");
   lcd.setCursor(0, 1);
-  lcd.print(totalTime/1000);
+  lcd.print(totalTime);
 
   // Serial.println(blockStatus); // For debugging
 }
