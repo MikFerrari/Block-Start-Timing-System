@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
-#define RX 5 //Connect to the TX pin of the HC-12
-#define TX 3 //Connect to the RX pin of the HC-12
+#define RX 0 //Connect to the TX pin of the HC-12
+#define TX 1 //Connect to the RX pin of the HC-12
 SoftwareSerial mySerial(RX, TX);
 
 void setup() {
