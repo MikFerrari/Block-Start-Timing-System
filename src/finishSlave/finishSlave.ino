@@ -34,20 +34,24 @@ void loop() {
 
   // Receive start signal from master
   while(HC12.available() && athleteRunning == false) {
+    Serial.println(char(HC12.read())); // Read HC12 data to empty its buffer
     initialTime = millis();
     athleteRunning = true;
   }
 
-  if(photocellStatus == 0 && athleteRunning == true) {
-    totalTime = millis() - initialTime;
-    athleteRunning = false;
+  if(photocellStatus == HIGH && athleteRunning == true) {
+    totalTime = (millis() - initialTime)/1000;
+    // Print time on LCD Display  
+    lcd.setCursor(0, 0);
+    lcd.print("Total time [s]:");
+    lcd.setCursor(0, 1);
+    lcd.print(totalTime);
+    Serial.println(totalTime);
   }
 
-  // Print time on LCD Display  
-  lcd.setCursor(0, 0);
-  lcd.print("Total time [s]:");
-  lcd.setCursor(0, 1);
-  lcd.print(totalTime);
+  if(photocellStatus == LOW && athleteRunning == true) {
+    athleteRunning = false;
+  }
   
   // Serial.println(photocellStatus); // For debugging
 }
