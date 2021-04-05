@@ -2,6 +2,8 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
+#define BAUDRATE 9600
+
 // Variable declarations
 SoftwareSerial HC12(2, 3); // HC-12 TX Pin, HC-12 RX Pin
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
@@ -20,8 +22,8 @@ void setup() {
   lcd.begin(16, 2);
 
   // Initialise Serial communication and Radio Module
-  Serial.begin(9600);
-  HC12.begin(9600);
+  Serial.begin(BAUDRATE);
+  HC12.begin(BAUDRATE);
 
   // Declare starting block pin
   pinMode(photocellPin,INPUT);
@@ -36,6 +38,8 @@ void loop() {
   while(HC12.available() && athleteRunning == false) {
     Serial.println(char(HC12.read())); // Read HC12 data to empty its buffer
     initialTime = millis();
+    HC12.end();
+    lcd.clear();
     athleteRunning = true;
   }
 
@@ -51,6 +55,7 @@ void loop() {
 
   if(photocellStatus == LOW && athleteRunning == true) {
     athleteRunning = false;
+    HC12.begin(BAUDRATE);
   }
   
   // Serial.println(photocellStatus); // For debugging
