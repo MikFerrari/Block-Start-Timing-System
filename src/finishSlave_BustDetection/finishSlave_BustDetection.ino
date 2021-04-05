@@ -20,10 +20,13 @@ float totalTime = 0;
 int i = 0;
 
 const int nTimes = 300;  // Memorize times for 0.3s with 1ms resolution
-const byte bufferSize = 100; // Detect up to 100 voltage changes in photocell signal
 float times[nTimes] = { };
 byte photocellValues[nTimes] = { };   
 
+int count;
+byte k = 0;
+int maxCount = 0;
+int maxIdx = 0;
 
 void setup() {
   // Set up the LCD's number of columns and rows
@@ -43,7 +46,7 @@ void loop() {
   photocellStatus = digitalRead(photocellPin);
 
   // Receive start signal from master
-  while(HC12.available() && athleteRunning == false && finishLineReached == false) {
+  while(HC12.available() && athleteRunning == false) {
     Serial.println(char(HC12.read())); // Read HC12 data to empty its buffer
     initialTime = millis();
     HC12.end();
@@ -58,11 +61,11 @@ void loop() {
     lcd.print("Total time [s]:");
     lcd.setCursor(0, 1);
     lcd.print(totalTime);
-    Serial.println(totalTime);
+    // Serial.println(totalTime);
   }
 
   if(photocellStatus == LOW && athleteRunning == true && finishLineReached == false) {
-    finishLineReached == true;
+    finishLineReached = true;
     i = 0;
   }
 
@@ -70,6 +73,8 @@ void loop() {
     totalTime = (millis() - initialTime)/1000;
     times[i] = totalTime;
     photocellValues[i] = photocellStatus;
+    Serial.println(photocellValues[i]); // For debugging
+    Serial.println(times[i]); // For debugging
     i++;
     if(i == nTimes) {
       acquisitionCompleted = true;
@@ -77,36 +82,38 @@ void loop() {
   }
 
   if(acquisitionCompleted == true) {
-    int count = 1;
-    byte k = 0;
-    int maxCount = 0;
-    int maxIdx = 0;
-    int counts[bufferSize] = { };
+    count = 0;
+    k = 0;
+    maxCount = 0;
+    maxIdx = 0;
     
     for(int j = 1; j < nTimes; j++) {
       if(photocellValues[j] == LOW && photocellValues[j] == photocellValues[j-1]) {
         count++;
       }
+      // Serial.println(count); // For debugging
       if(photocellValues[j] == HIGH && photocellValues[j-1] == LOW) {
-        counts[k] = count;
         if(count > maxCount) {
           maxCount = count;
-          maxIdx = j-count;
-        }
-        count = 1;
+          maxIdx = j-count-1;
+        }    
+        count = 0;
         k++;
       }
     }
-    
+      
     // Print time on LCD Display  
     lcd.setCursor(0, 0);
     lcd.print("Total time [s]:");
     lcd.setCursor(0, 1);
     lcd.print(times[maxIdx]);
-    Serial.println(times[maxIdx]);
+    // Serial.println(times[maxIdx]); // For debugging
+    // Serial.println(maxCount); // For debugging
+    // Serial.println(maxIdx); // For debugging
   
     acquisitionCompleted = false;
     athleteRunning = false;
+    finishLineReached = false;
     HC12.begin(BAUDRATE);
   }
   
