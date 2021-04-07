@@ -40,8 +40,8 @@ class PoseDetector:
 
 def main():
     cap = cv2.VideoCapture(1)  # Get frames from webcam
-    width = 1920
-    height = 1080
+    width = 1280
+    height = 720
     cap.set(3, width)
     cap.set(4, height)
     pTime = 0
@@ -60,7 +60,8 @@ def main():
         lmList = detector.findPosition(img, draw=False)
         if len(lmList) != 0:
             # print(lmList)
-            print(lmList[14])
+            # print(lmList[lm_leftKnee])
+            # print(lmList[lm_rightKnee])
             cv2.circle(img, (lmList[lm_leftKnee][1], lmList[lm_leftKnee][2]), 10, (0, 0, 255), cv2.FILLED)
             cv2.circle(img, (lmList[lm_rightKnee][1], lmList[lm_rightKnee][2]), 10, (255, 0, 0), cv2.FILLED)
 
@@ -72,17 +73,21 @@ def main():
 
         cv2.imshow("Image", img)
 
-        if len(lmList) != 0:
-            xData_leftKnee.append(width-lmList[lm_leftKnee][1])
-            yData_leftKnee.append(height-lmList[lm_leftKnee][2])
-            xData_rightKnee.append(width - lmList[lm_rightKnee][1])
-            yData_rightKnee.append(height - lmList[lm_rightKnee][2])
+        if lmList:
+            if len(lmList[lm_leftKnee]) != 0:
+                xData_leftKnee.append(width-lmList[lm_leftKnee][1])
+                yData_leftKnee.append(height-lmList[lm_leftKnee][2])
+            if len(lmList[lm_rightKnee]) != 0:
+                xData_rightKnee.append(width-lmList[lm_rightKnee][1])
+                yData_rightKnee.append(height-lmList[lm_rightKnee][2])
 
         if cv2.waitKey(1) == ord('q'):
             break
 
     f = plt.figure()
     ax = plt.axes()
+    ax.set_xlim([0, width])
+    ax.set_ylim([0, height])
     ax.plot(xData_leftKnee, yData_leftKnee, color='red', marker='x', markersize=5, label="left knee")
     ax.plot(xData_rightKnee, yData_rightKnee, color='blue', marker='x', markersize=5, label="right knee")
     ax.legend()
