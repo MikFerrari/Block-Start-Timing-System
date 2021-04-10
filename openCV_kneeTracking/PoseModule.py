@@ -44,6 +44,14 @@ def main():
     height = 720
     cap.set(3, width)
     cap.set(4, height)
+
+    out_fileName = "output.mp4"
+    fps = 30
+    out_width = width
+    out_height = height
+    output_size = (out_width, out_height)
+    out = cv2.VideoWriter(out_fileName, cv2.VideoWriter_fourcc('M','J','P','G'), fps , output_size)
+    
     pTime = 0
     detector = PoseDetector()
 
@@ -51,8 +59,8 @@ def main():
     yData_leftKnee = []
     xData_rightKnee = []
     yData_rightKnee = []
-    lm_leftKnee = 25
-    lm_rightKnee = 26
+    lm_leftKnee = 15    # left hand palm
+    lm_rightKnee = 16   # right hand palm
 
     while True:
         success, img = cap.read()
@@ -72,6 +80,8 @@ def main():
         cv2.putText(img, str(int(fps)), (70, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
 
         cv2.imshow("Image", img)
+        
+        out.write(cv2.resize(img, output_size))
 
         if lmList:
             if len(lmList[lm_leftKnee]) != 0:
@@ -84,6 +94,9 @@ def main():
         if cv2.waitKey(1) == ord('q'):
             break
 
+    out.release()
+
+    # Plot desired landmarks
     f = plt.figure()
     ax = plt.axes()
     ax.set_xlim([0, width])
