@@ -101,8 +101,8 @@ def main():
     ax = plt.axes()
     ax.set_xlim([0, width])
     ax.set_ylim([0, height])
-    ax.plot(xData_leftKnee, yData_leftKnee, color='red', marker='x', markersize=5, label="left knee")
-    ax.plot(xData_rightKnee, yData_rightKnee, color='blue', marker='x', markersize=5, label="right knee")
+    ax.plot(xData_leftKnee, yData_leftKnee, color='red', marker='x', markersize=5, label="left hand palm") 		# label="left knee"
+    ax.plot(xData_rightKnee, yData_rightKnee, color='blue', marker='x', markersize=5, label="right hand palm") 	# label="right knee"
     ax.legend()
     plt.title("Body Joints Trajectory")
     plt.xlabel("x [px]")
