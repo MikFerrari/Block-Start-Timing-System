@@ -1,4 +1,4 @@
-// Import library for HC-12 Radio Module
+ // Import library for HC-12 Radio Module
 #include <SoftwareSerial.h>
 
 // Variable declarations
@@ -33,5 +33,5 @@ void loop() {
     athleteReady = false;  
   }
 
-  // Serial.println(blockStatus); // For debugging
+  Serial.println(blockStatus); // For debugging
 }
