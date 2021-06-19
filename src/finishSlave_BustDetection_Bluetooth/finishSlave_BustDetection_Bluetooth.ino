@@ -55,7 +55,7 @@ void setup() {
 
 void loop() {
   // Read block status to determine if the athlete is ready to start
-  photocellStatus = digitalRead(photocellPin);
+  photocellStatus = !digitalRead(photocellPin); // Invert value since the photocell switch is NC
 
   // Receive start signal from master
   while(HC12.available() && athleteRunning == false) {
@@ -73,7 +73,7 @@ void loop() {
     lcd.print("Total time [s]:");
     lcd.setCursor(0, 1);
     lcd.print(totalTime, 3);
-    // Serial.println(totalTime);
+    Serial.println(totalTime);
   }
 
   if(photocellStatus == LOW && athleteRunning == true && finishLineReached == false) {
@@ -86,7 +86,7 @@ void loop() {
     times[i] = totalTime;
     photocellValues[i] = photocellStatus;
     // Serial.println(photocellValues[i]); // For debugging
-    Serial.println(times[i]); // For debugging
+    // Serial.println(times[i]); // For debugging
     i++;
     if(i == nTimes) {
       acquisitionCompleted = true;
