@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 
 // Variable declarations
-SoftwareSerial HC12(2, 3); // HC-12 TX Pin, HC-12 RX Pin
+SoftwareSerial HC12(2, 12); // HC-12 TX Pin, HC-12 RX Pin
 
 const int blockPin = 6;
 int blockStatus;
