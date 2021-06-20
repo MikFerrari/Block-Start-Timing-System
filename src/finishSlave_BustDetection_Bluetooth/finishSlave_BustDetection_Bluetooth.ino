@@ -55,7 +55,8 @@ void setup() {
 
 void loop() {
   // Read block status to determine if the athlete is ready to start
-  photocellStatus = !digitalRead(photocellPin); // Invert value since the photocell switch is NC
+  photocellStatus = digitalRead(photocellPin);
+  // Serial.println(photocellStatus);  // For debugging
 
   // Receive start signal from master
   while(HC12.available() && athleteRunning == false) {
