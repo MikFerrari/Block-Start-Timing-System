@@ -15,6 +15,7 @@ byte photocellStatus;
 bool athleteRunning = false;
 bool finishLineReached = false;
 bool acquisitionCompleted = false;
+bool stayIdle = false;
 
 float initialTime = 0;
 float totalTime = 0;
@@ -29,6 +30,10 @@ byte k = 0;
 int maxCount = 0;
 int maxIdx = 0;
 
+// parameters to print to Serial (bluetooth phone application)
+byte nIntDigits = 3;
+byte nDecimalDigits = 3;
+    
 
 void serialFlush(){
   while(Serial.available() > 0) {
@@ -50,6 +55,18 @@ void setup() {
   pinMode(photocellPin,INPUT);
 
   // serialFlush();
+
+  // Print on LCD Display  
+  lcd.clear();
+  lcd.setCursor(4, 0);
+  lcd.print("Ready to");
+  lcd.setCursor(5, 1);
+  lcd.print("start!");
+
+  // Print to Serial (bluetooth phone application)
+  char readyMessage[17] = "Ready to start!";
+  Serial.println(readyMessage);
+    
 }
 
 
@@ -59,7 +76,7 @@ void loop() {
   // Serial.println(photocellStatus);  // For debugging
 
   // Receive start signal from master
-  while(HC12.available() && athleteRunning == false) {
+  while(HC12.available() && athleteRunning == false && stayIdle == false) {
     Serial.println(char(HC12.read())); // Read HC12 data to empty its buffer
     initialTime = millis();
     HC12.end();
@@ -74,7 +91,9 @@ void loop() {
     lcd.print("Total time [s]:");
     lcd.setCursor(0, 1);
     lcd.print(totalTime, 3);
-    Serial.println(totalTime);
+
+    // Send time to bluetooth device and display it
+    // Serial.println(totalTime);
   }
 
   if(photocellStatus == LOW && athleteRunning == true && finishLineReached == false) {
@@ -127,17 +146,38 @@ void loop() {
     acquisitionCompleted = false;
     athleteRunning = false;
     finishLineReached = false;
+    stayIdle = true;
 
     // Print to Serial (bluetooth phone application)
-    char buff[20] = "Total time [s]: ";
+    char buff[18] = "Total time [s]: ";
     char floatBuff[10];
-    byte nIntDigits = 3;
-    byte nDecimalDigits = 3;
     dtostrf(times[maxIdx], nIntDigits, nDecimalDigits, floatBuff);
     strcat(buff, floatBuff);
     Serial.println(buff);
     
     HC12.begin(BAUDRATE);
+  }
+
+  if(stayIdle == true) {
+    delay(30*1000); // Display result for 30 seconds, then set timer to 0
+    
+    // Print time on LCD Display  
+    lcd.clear();
+    lcd.setCursor(4, 0);
+    lcd.print("Ready to");
+    lcd.setCursor(5, 1);
+    lcd.print("start!");
+
+    // Print to Serial (bluetooth phone application)
+    char readyMessage[17] = "Ready to start!";
+    Serial.println(readyMessage);
+    
+    stayIdle = false;
+    
+    // Dump any start command received during the IDLE status
+    while(HC12.available()) {
+      HC12.read();
+    }
   }
   
 }
