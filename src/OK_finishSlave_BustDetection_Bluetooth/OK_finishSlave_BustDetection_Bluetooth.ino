@@ -58,10 +58,10 @@ void setup() {
 
   // Print on LCD Display  
   lcd.clear();
-  lcd.setCursor(4, 0);
-  lcd.print("Ready to");
-  lcd.setCursor(5, 1);
-  lcd.print("start!");
+  lcd.setCursor(1, 0);
+  lcd.print("- B&F Timing -");
+  lcd.setCursor(1, 1);
+  lcd.print("Ready to start!");
 
   // Print to Serial (bluetooth phone application)
   char readyMessage[17] = "Ready to start!";
@@ -77,7 +77,8 @@ void loop() {
 
   // Receive start signal from master
   while(HC12.available() && athleteRunning == false && stayIdle == false) {
-    Serial.println(char(HC12.read())); // Read HC12 data to empty its buffer
+    HC12.read(); // Read HC12 data to empty its buffer
+    Serial.println("Started");
     initialTime = millis();
     HC12.end();
     lcd.clear();
