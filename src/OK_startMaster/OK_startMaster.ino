@@ -28,8 +28,12 @@ int start_switch_1_status_old;
 int start_switch_2_status_old; // not used
 
 // Time variables
-const int initial_pause = 3000; // ms
-int delay_SET;
+const int cycle_delay = 5; // ms
+const int initial_pause = 3000/cycle_delay; // ms
+int get_ready_counter = 0;  // ms
+const int get_ready_max = 3000/cycle_delay; // ms
+int set_counter = 0;  // ms
+int set_counter_max = 1500/cycle_delay;  // ms
 float t0 = 0.0;
 float dt = 0.0;
 float reaction_time;
@@ -40,6 +44,7 @@ bool start_command = false;
 bool timer_started = false;
 bool false_start = false;
 bool gun_fired = false;
+bool set_sound_done = false;
 
 // SET command
 const int duration_SET = 500;  // ms
@@ -92,25 +97,33 @@ void loop() {
   }
 
   // The gun was fired and the timer has started
-  if(athleteReady == true && start_command == true) {
+  if(athleteReady == true && start_command == true && false_start == false) {
     // Serial.println("3"); // debug
     
     // Pause to get ready
-    delay(3000);
-    
-    // SET command
-    tone(buzzer_pin,tone_SET,duration_SET);
+    if(get_ready_counter < get_ready_max) {
+      get_ready_counter += 1;
+    }
+    else {
+      if (set_sound_done == false) {      
+        // SET command
+        tone(buzzer_pin,tone_SET,duration_SET);
+        set_sound_done = true;
+      }
+      
+      if(set_counter < set_counter_max) {
+        set_counter += 1;
+      }
+      else {        
+        // START command
+        tone(buzzer_pin,tone_GUN,duration_GUN);
+        HC12.print("start");
+        reaction_time = millis();
 
-    delay_SET = 1500 + random(0,1000); // ms
-    delay(delay_SET);
-
-    // START command
-    tone(buzzer_pin,tone_GUN,duration_GUN);
-    HC12.print("start");
-    reaction_time = millis();
-
-    gun_fired = true;
-    start_command = false;  
+        gun_fired = true;
+        start_command = false;
+      }
+    }
   }
 
   // The athlete has left the block
@@ -139,13 +152,25 @@ void loop() {
       HC12.print("false");
       false_start = false;
     }
-    
+
+    // Reset values for new start
+    set_counter_max = (1500 + random(0,1000))/cycle_delay; // ms
+    get_ready_counter = 0;
+    set_counter = 0;
+    set_sound_done = false;
+    start_command = false;
     athleteReady = false;
     gun_fired = false;
   }
   
   // Upload new position of the switch
   start_switch_1_status_old = start_switch_1_status;
+
+  /* // debug
+  Serial.print(get_ready_counter);
+  Serial.print(", ");
+  Serial.println(set_counter);
+  */
   
-  delay(5);
+  delay(cycle_delay);
 }

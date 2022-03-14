@@ -1,4 +1,6 @@
 // Import libraries for LCD Display and HC-12 Radio Module + Bluetooth Module
+// BLUETOOTH DEVICE HC-05 - PSW: 1234
+
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
@@ -20,7 +22,7 @@ bool stayIdle = false;
 float initialTime = 0;
 float totalTime = 0;
 int i = 0;
-int reaction_time = 0;
+float reaction_time = 0;
 
 String received;
 
@@ -90,29 +92,30 @@ void loop() {
     else if(received == "false"){
       Serial.println("False Start");
     }
-    HC12.end();
     lcd.clear();
   }
 
   if(received == "start" && stayIdle == false) {
     while(HC12.available()) {
-      reaction_time = (HC12.readString()).toInt();
+      reaction_time = (HC12.readString()).toFloat()/1000;
+      // Serial.println(reaction_time); // debug
+      HC12.end();
     }
   
     if(photocellStatus == HIGH && athleteRunning == true && finishLineReached == false) {
-    totalTime = (millis() - initialTime)/1000;
-    // Print time on LCD Display  
-    lcd.setCursor(0, 0);
-    lcd.print("Time [s]:");
-    lcd.setCursor(12, 0);
-    lcd.print(totalTime, 3);
-    lcd.setCursor(0, 1);
-    lcd.print("Reac. [s]:");
-    lcd.setCursor(12, 1);
-    lcd.print(reaction_time, 3);
-
-    // Send time to bluetooth device and display it
-    // Serial.println(totalTime);
+      totalTime = (millis() - initialTime)/1000;
+      // Print time on LCD Display  
+      lcd.setCursor(0, 0);
+      lcd.print("Time:");
+      lcd.setCursor(7, 0);
+      lcd.print(totalTime, 3);
+      lcd.setCursor(0, 1);
+      lcd.print("Reaction:");
+      lcd.setCursor(11, 1);
+      lcd.print(reaction_time, 3);
+  
+      // Send time to bluetooth device and display it
+      // Serial.println(totalTime);
     }
   
     if(photocellStatus == LOW && athleteRunning == true && finishLineReached == false) {
@@ -155,12 +158,12 @@ void loop() {
         
       // Print time on LCD Display  
       lcd.setCursor(0, 0);
-      lcd.print("Time [s]:");
-      lcd.setCursor(12, 0);
+      lcd.print("Time:");
+      lcd.setCursor(7, 0);
       lcd.print(times[maxIdx], 3);
       lcd.setCursor(0, 1);
-      lcd.print("Reac. [s]:");
-      lcd.setCursor(12, 1);
+      lcd.print("Reaction:");
+      lcd.setCursor(11, 1);
       lcd.print(reaction_time, 3);
       
       // Serial.println(times[maxIdx]); // For debugging
@@ -178,10 +181,14 @@ void loop() {
       dtostrf(times[maxIdx], nIntDigits, nDecimalDigits, floatBuff);
       strcat(buff, floatBuff);
       Serial.println(buff);
-      
+      Serial.print("Reaction time [s]: ");
+      Serial.println(reaction_time,3); // 3 decimal digits
+
+      // Reset
       HC12.begin(BAUDRATE);
+      received = ""; 
     }
-    received = ""; 
+
   }
   
   else if (received == "false") {
