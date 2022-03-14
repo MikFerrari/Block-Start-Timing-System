@@ -9,6 +9,8 @@
 #include <SoftwareSerial.h>
 #include <pitches.h>
 
+#define BAUDRATE 9600
+
 // Variable declarations
 SoftwareSerial HC12(2, 12); // HC-12 TX Pin, HC-12 RX Pin
 
@@ -60,8 +62,8 @@ const int tone_FALSE = NOTE_C6;
 
 void setup() {
   // Initialise Serial communication and Radio Module
-  Serial.begin(9600);
-  HC12.begin(9600);
+  Serial.begin(BAUDRATE);
+  HC12.begin(BAUDRATE);
 
   // Declare pins as inputs
   pinMode(blockPin,INPUT);
@@ -81,18 +83,19 @@ void loop() {
 
   // The athlete is ready on the blocks
   if(blockStatus == HIGH) {
-    Serial.println("1");
+    // Serial.println("1"); // debug
     athleteReady = true;
     if (start_switch_1_status != start_switch_1_status_old) {
-      Serial.println("2");
+      // Serial.println("2"); // debug
       start_command = true;
     }
   }
 
   // The gun was fired and the timer has started
   if(athleteReady == true && start_command == true) {
-    Serial.println("3");
-    // pause to get ready
+    // Serial.println("3"); // debug
+    
+    // Pause to get ready
     delay(3000);
     
     // SET command
@@ -103,7 +106,7 @@ void loop() {
 
     // START command
     tone(buzzer_pin,tone_GUN,duration_GUN);
-    HC12.write("s");
+    HC12.print("start");
     reaction_time = millis();
 
     gun_fired = true;
@@ -112,9 +115,9 @@ void loop() {
 
   // The athlete has left the block
   if(athleteReady == true && blockStatus == LOW) {
-    Serial.println("4");
+    // Serial.println("4"); // debug
     if(gun_fired == false) {
-      Serial.println("5");
+      // Serial.println("5"); // debug
       false_start = true;
     }
     reaction_time = millis()-reaction_time;
@@ -128,12 +131,12 @@ void loop() {
         delay(pause_RUN);
         dt = millis();
       }
-      HC12.write(reaction_time);
+      HC12.print(reaction_time);
       Serial.println(reaction_time); // debug
     }
     else {
       tone(buzzer_pin,tone_FALSE,duration_FALSE); // False start -> continuous sound
-      HC12.write("false");
+      HC12.print("false");
       false_start = false;
     }
     
