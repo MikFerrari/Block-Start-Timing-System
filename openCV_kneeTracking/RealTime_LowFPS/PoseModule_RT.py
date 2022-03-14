@@ -39,7 +39,7 @@ class PoseDetector:
 
 
 def main():
-    cap = cv2.VideoCapture(1)  # Get frames from webcam
+    cap = cv2.VideoCapture(0)  # Get frames from webcam
     width = 1280
     height = 720
     cap.set(3, width)
