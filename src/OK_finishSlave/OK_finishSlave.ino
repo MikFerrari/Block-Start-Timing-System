@@ -11,6 +11,8 @@ SoftwareSerial HC12(2, 3); // HC-12 TX Pin, HC-12 RX Pin
 SoftwareSerial bluetooth(1, 5); // RX Pin, TX Pin
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
+const byte resetButtonPin = 13;
+byte resetButtonStatus;
 const byte photocellPin = 6;
 byte photocellStatus;
 
@@ -34,6 +36,8 @@ int count;
 byte k = 0;
 int maxCount = 0;
 int maxIdx = 0;
+int idleDuration = 30*1000; // Wait 30 seconds
+int t = 0;
 
 // parameters to print to Serial (bluetooth phone application)
 byte nIntDigits = 3;
@@ -58,6 +62,7 @@ void setup() {
 
   // Declare starting block pin
   pinMode(photocellPin,INPUT);
+  pinMode(resetButtonPin,INPUT);
 
   // serialFlush();
 
@@ -78,7 +83,9 @@ void setup() {
 void loop() {
   // Read block status to determine if the athlete is ready to start
   photocellStatus = digitalRead(photocellPin);
-  // Serial.println(photocellStatus);  // For debugging
+  resetButtonStatus = digitalRead(resetButtonPin);
+  Serial.print(resetButtonStatus);
+  Serial.println(photocellStatus);  // For debugging
 
   // Receive start signal from master
   while(HC12.available() && athleteRunning == false && stayIdle == false) {
@@ -201,7 +208,14 @@ void loop() {
   
 
   if(stayIdle == true) {
-    delay(30*1000); // Display result for 30 seconds, then set timer to 0
+    for(t = 0; t < idleDuration; t++) {  // Display result for idleDuration seconds, then set timer to 0
+      resetButtonStatus = digitalRead(resetButtonPin);
+      Serial.println(resetButtonStatus);
+      delay(1);
+      if (resetButtonStatus == HIGH) {  // Stop waiting if the reset button is pressed
+        break;
+      }
+    }
     
     // Print time on LCD Display  
     lcd.clear();
@@ -221,5 +235,4 @@ void loop() {
       HC12.read();
     }
   }
-
 }

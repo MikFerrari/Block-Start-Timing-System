@@ -7,7 +7,14 @@
 
 // Import library for HC-12 Radio Module and to generate sounds with buzzer
 #include <SoftwareSerial.h>
-#include <pitches.h>
+
+#include <pitches.h> // Include to use buzzer
+
+// Include to use speaker -> SIGNAL MUST COME FROM PIN 11 IN ORDER TO MAKE THE LIBRARY WORK!
+#include <PCM.h>
+#include "Sound_SET.h"
+// #include "Sound_GUN.h"
+#include "Sound_GUN_short.h"
 
 #define BAUDRATE 9600
 
@@ -15,21 +22,16 @@
 SoftwareSerial HC12(2, 12); // HC-12 TX Pin, HC-12 RX Pin
 
 // PIN declarations
-const int start_switch_1 = 3;
-const int start_switch_2 = 5; // not used
-const int buzzer_pin = 8;
+const int start_switch = 5;
+const int buzzer_pin = 11;
 const int blockPin = 6;
 
 // Status variables
 int blockStatus;
-int start_switch_1_status;
-int start_switch_2_status; // not used
-int start_switch_1_status_old;
-int start_switch_2_status_old; // not used
+int start_switch_status;
 
 // Time variables
 const int cycle_delay = 5; // ms
-const int initial_pause = 3000/cycle_delay; // ms
 int get_ready_counter = 0;  // ms
 const int get_ready_max = 3000/cycle_delay; // ms
 int set_counter = 0;  // ms
@@ -46,6 +48,8 @@ bool false_start = false;
 bool gun_fired = false;
 bool set_sound_done = false;
 
+
+// Use buzzer to give SET and START commands
 // SET command
 const int duration_SET = 500;  // ms
 const int tone_SET = NOTE_C5;
@@ -72,25 +76,20 @@ void setup() {
 
   // Declare pins as inputs
   pinMode(blockPin,INPUT);
-  pinMode(start_switch_1, INPUT);
-  pinMode(start_switch_2, INPUT); // not used
-
-  // Detect initial position of the switch
-  start_switch_1_status = digitalRead(start_switch_1);
-  start_switch_1_status_old = start_switch_1_status;
+  pinMode(start_switch, INPUT);
 }
 
 
 void loop() {
-  // Read block and switch status
+  // Read block and switches status
   blockStatus = digitalRead(blockPin); // Normally open signal
-  start_switch_1_status = digitalRead(start_switch_1);
+  start_switch_status = digitalRead(start_switch);
 
   // The athlete is ready on the blocks
   if(blockStatus == HIGH) {
     // Serial.println("1"); // debug
     athleteReady = true;
-    if (start_switch_1_status != start_switch_1_status_old) {
+    if (start_switch_status == HIGH) {
       // Serial.println("2"); // debug
       start_command = true;
     }
@@ -107,8 +106,9 @@ void loop() {
     else {
       if (set_sound_done == false) {      
         // SET command
-        tone(buzzer_pin,tone_SET,duration_SET);
         set_sound_done = true;
+        // tone(buzzer_pin,tone_SET,duration_SET); // Using buzzer
+        startPlayback(sounddata_data_SET, sizeof(sounddata_data_SET)); // Using speaker
       }
       
       if(set_counter < set_counter_max) {
@@ -116,12 +116,12 @@ void loop() {
       }
       else {        
         // START command
-        tone(buzzer_pin,tone_GUN,duration_GUN);
-        HC12.print("start");
+        HC12.print("start"); // Timer starts when the pistol is triggered
         reaction_time = millis();
-
         gun_fired = true;
         start_command = false;
+        // tone(buzzer_pin,tone_GUN,duration_GUN); // Using buzzer
+        startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker
       }
     }
   }
@@ -136,6 +136,7 @@ void loop() {
     reaction_time = millis()-reaction_time;
 
     if(reaction_time >= 100 && false_start == false) {
+      /*
       // Acoustic feedback for the athlete: has the timer started?
       t0 = millis();
       dt = t0;
@@ -144,13 +145,17 @@ void loop() {
         delay(pause_RUN);
         dt = millis();
       }
+      */
       HC12.print(reaction_time);
       Serial.println(reaction_time); // debug
     }
     else {
-      tone(buzzer_pin,tone_FALSE,duration_FALSE); // False start -> continuous sound
       HC12.print("false");
       false_start = false;
+      // tone(buzzer_pin,tone_FALSE,duration_FALSE); // False start -> continuous  (using buzzer)
+      startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker -> double gun sound
+      delay(1000);
+      startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker
     }
 
     // Reset values for new start
@@ -162,15 +167,15 @@ void loop() {
     athleteReady = false;
     gun_fired = false;
   }
-  
-  // Upload new position of the switch
-  start_switch_1_status_old = start_switch_1_status;
 
-  /* // debug
+  /*
+  // debug
   Serial.print(get_ready_counter);
   Serial.print(", ");
   Serial.println(set_counter);
   */
+  // debug
+  Serial.print(start_switch_status);
   
   delay(cycle_delay);
 }
