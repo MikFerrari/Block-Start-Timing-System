@@ -12,7 +12,8 @@
 
 // Include to use speaker -> SIGNAL MUST COME FROM PIN 11 IN ORDER TO MAKE THE LIBRARY WORK!
 #include <PCM.h>
-#include "Sound_SET.h"
+// #include "Sound_SET.h"
+#include "Sound_SET_short.h"
 // #include "Sound_GUN.h"
 #include "Sound_GUN_short.h"
 
@@ -116,7 +117,8 @@ void loop() {
       }
       else {        
         // START command
-        HC12.print("start"); // Timer starts when the pistol is triggered
+        HC12.write('s'); // Timer starts when the pistol is triggered
+        Serial.println('s'); // debug
         reaction_time = millis();
         gun_fired = true;
         start_command = false;
@@ -133,9 +135,10 @@ void loop() {
       // Serial.println("5"); // debug
       false_start = true;
     }
-    reaction_time = millis()-reaction_time;
+    
+    reaction_time = (millis()-reaction_time)/1000;
 
-    if(reaction_time >= 100 && false_start == false) {
+    if(reaction_time >= 0.100 && false_start == false) {
       /*
       // Acoustic feedback for the athlete: has the timer started?
       t0 = millis();
@@ -146,11 +149,13 @@ void loop() {
         dt = millis();
       }
       */
-      HC12.print(reaction_time);
-      Serial.println(reaction_time); // debug
+      HC12.write('t'); // Tell the finish module that the athlete has left the block,
+                       // so that it can compute the reaction time as well
+      Serial.println(reaction_time,3); // debug
     }
     else {
-      HC12.print("false");
+      HC12.write('f');
+      Serial.println('f'); // debug
       false_start = false;
       // tone(buzzer_pin,tone_FALSE,duration_FALSE); // False start -> continuous  (using buzzer)
       startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker -> double gun sound
@@ -175,7 +180,7 @@ void loop() {
   Serial.println(set_counter);
   */
   // debug
-  Serial.print(start_switch_status);
+  // Serial.print(start_switch_status);
   
   delay(cycle_delay);
 }

@@ -1,4 +1,4 @@
-// Import libraries for LCD Display and HC-12 Radio Module + Bluetooth Module
+// Import libraries for LCD Display and SoftwareSerial for Bluetooth Module
 // BLUETOOTH DEVICE HC-05 - PSW: 1234
 
 #include <SoftwareSerial.h>
@@ -7,8 +7,7 @@
 #define BAUDRATE 9600
 
 // Variable declarations
-SoftwareSerial HC12(2, 3); // HC-12 TX Pin, HC-12 RX Pin
-SoftwareSerial bluetooth(1, 5); // RX Pin, TX Pin
+SoftwareSerial bluetooth(4, 5); // RX Pin, TX Pin
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 const byte resetButtonPin = 13;
@@ -26,7 +25,8 @@ float totalTime = 0;
 int i = 0;
 float reaction_time = 0;
 
-String received;
+char received;
+char received_reaction;
 
 const int nTimes = 200;  // Memorize times for 0.2s with 1ms resolution
 float times[nTimes] = { };
@@ -58,7 +58,7 @@ void setup() {
   // Initialise Serial communication, Radio Module and Bluetooth Module
   Serial.begin(BAUDRATE);
   bluetooth.begin(BAUDRATE);
-  HC12.begin(BAUDRATE);
+  Serial1.begin(BAUDRATE); // On Arduino Leonardo Pins 1 and 0 are used as TX and RX -> USE THIS INSTEAD OF HC12
 
   // Declare starting block pin
   pinMode(photocellPin,INPUT);
@@ -84,29 +84,31 @@ void loop() {
   // Read block status to determine if the athlete is ready to start
   photocellStatus = digitalRead(photocellPin);
   resetButtonStatus = digitalRead(resetButtonPin);
-  Serial.print(resetButtonStatus);
-  Serial.println(photocellStatus);  // For debugging
 
   // Receive start signal from master
-  while(HC12.available() && athleteRunning == false && stayIdle == false) {
-    received = HC12.readString(); // Read HC12 data to empty its buffer
-    if(received == "start") {
+  while(Serial1.available() && athleteRunning == false && stayIdle == false) {
+    received = Serial1.read(); // Read data from Serial1 (antenna) to empty its buffer
+    Serial.println(received); // debug
+    if(received == 's') {
       initialTime = millis();
       Serial.println("Started");
       athleteRunning = true;
 
     }
-    else if(received == "false"){
+    else if(received == 'f'){
       Serial.println("False Start");
     }
     lcd.clear();
   }
 
-  if(received == "start" && stayIdle == false) {
-    while(HC12.available()) {
-      reaction_time = (HC12.readString()).toFloat()/1000;
-      // Serial.println(reaction_time); // debug
-      HC12.end();
+  if(received == 's' && stayIdle == false) {
+    while(Serial1.available()) {
+      received_reaction = Serial1.read(); // Read data from Serial1 (antenna) to empty its buffer
+      if(received_reaction == 't') {
+        reaction_time = (millis() - initialTime)/1000;  
+      }
+      Serial.println(reaction_time,3); // debug
+      Serial1.end();
     }
   
     if(photocellStatus == HIGH && athleteRunning == true && finishLineReached == false) {
@@ -192,25 +194,26 @@ void loop() {
       Serial.println(reaction_time,3); // 3 decimal digits
 
       // Reset
-      HC12.begin(BAUDRATE);
-      received = ""; 
+      Serial1.begin(BAUDRATE);
+      received = '\0';
+      received_reaction = '\0';
     }
 
   }
   
-  else if (received == "false") {
+  else if (received == 'f') {
     // Print FALSE START on LCD Display  
     lcd.setCursor(2, 0);
     lcd.print("FALSE START!");
     stayIdle = true;
-    received = "";
+    received = '\0';
   }
   
 
   if(stayIdle == true) {
     for(t = 0; t < idleDuration; t++) {  // Display result for idleDuration seconds, then set timer to 0
       resetButtonStatus = digitalRead(resetButtonPin);
-      Serial.println(resetButtonStatus);
+      // Serial.println(resetButtonStatus); // debug
       delay(1);
       if (resetButtonStatus == HIGH) {  // Stop waiting if the reset button is pressed
         break;
@@ -231,8 +234,8 @@ void loop() {
     stayIdle = false;
     
     // Dump any start command received during the IDLE status
-    while(HC12.available()) {
-      HC12.read();
+    while(Serial1.available()) {
+      Serial1.read();
     }
   }
 }

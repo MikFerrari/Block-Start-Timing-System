@@ -1,9 +1,9 @@
 // sounddata sound made by wav2c
 
 // const int sounddata_sampleRate = 8000;
-const int sounddata_length = 7864;
+const int sounddata_length_GUN = 7864;
 
-const signed char sounddata_data_GUN[] PROGMEM ={128, 
+const signed char sounddata_data_GUN[] PROGMEM ={128,
 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 127, 127, 127, 127, 127, 127, 128, 127, 127, 127, 
 127, 127, 127, 128, 128, 128, 128, 128, 128, 128, 128, 127, 128, 128, 127, 127, 128, 128, 127, 127, 
 128, 128, 128, 127, 127, 128, 128, 128, 128, 128, 128, 127, 128, 127, 127, 128, 127, 128, 128, 128, 

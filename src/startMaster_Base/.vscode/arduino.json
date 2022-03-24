@@ -1,0 +1,5 @@
+{
+    "sketch": "startMaster_Base.ino",
+    "board": "arduino:avr:uno",
+    "port": "COM5"
+}
