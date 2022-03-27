@@ -9,7 +9,7 @@
 #define BAUDRATE 9600
 
 // Variable declarations
-SoftwareSerial bluetooth(4, 5); // RX Pin, TX Pin
+SoftwareSerial bluetooth(5, 4); // RX Pin, TX Pin
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 
 const byte resetButtonPin = 13;
@@ -85,7 +85,7 @@ void setup() {
   // Print to Serial (bluetooth phone application)
   char readyMessage[17] = "Ready to start!";
   Serial.println(readyMessage);
-    
+  bluetooth.println(readyMessage);
 }
 
 
@@ -114,12 +114,14 @@ void loop() {
     if(received == 's') {
       initialTime = millis();
       Serial.println("Started");
+      bluetooth.println("Started");
       athleteRunning = true;
       waiting_state = false;
 
     }
     else if(received == 'f'){
       Serial.println("False Start");
+      bluetooth.println("False Start");
       waiting_state = false;
     }
     lcd.clear();
@@ -146,9 +148,6 @@ void loop() {
       lcd.print("Reaction:");
       lcd.setCursor(11, 1);
       lcd.print(reaction_time, 3);
-  
-      // Send time to bluetooth device and display it
-      // Serial.println(totalTime);
 
       erroneous_state = false;
     }
@@ -220,8 +219,11 @@ void loop() {
       dtostrf(times[maxIdx], nIntDigits, nDecimalDigits, floatBuff);
       strcat(buff, floatBuff);
       Serial.println(buff);
+      bluetooth.println(buff);
       Serial.print("Reaction time [s]: ");
       Serial.println(reaction_time,3); // 3 decimal digits
+      bluetooth.print("Reaction time [s]: ");
+      bluetooth.println(reaction_time,3); // 3 decimal digits
 
       // Reset
       Serial1.begin(BAUDRATE);
@@ -264,6 +266,7 @@ void loop() {
     // Print to Serial (bluetooth phone application)
     char readyMessage[17] = "Ready to start!";
     Serial.println(readyMessage);
+    bluetooth.println(readyMessage);
     
     stayIdle = false;
     waiting_state = true;
