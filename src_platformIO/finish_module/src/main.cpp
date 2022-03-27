@@ -21,6 +21,8 @@ bool athleteRunning = false;
 bool finishLineReached = false;
 bool acquisitionCompleted = false;
 bool stayIdle = false;
+bool erroneous_state = true;
+bool waiting_state = true;
 
 float initialTime = 0;
 float totalTime = 0;
@@ -72,8 +74,13 @@ void setup() {
   lcd.clear();
   lcd.setCursor(1, 0);
   lcd.print("- B&F Timing -");
-  lcd.setCursor(1, 1);
-  lcd.print("Ready to start!");
+
+  for(int j = 1; j < 15; j++) {
+    lcd.setCursor(j, 1);
+    lcd.print(".");
+    delay(500);
+  }
+  lcd.clear();
 
   // Print to Serial (bluetooth phone application)
   char readyMessage[17] = "Ready to start!";
@@ -87,6 +94,19 @@ void loop() {
   photocellStatus = digitalRead(photocellPin);
   resetButtonStatus = digitalRead(resetButtonPin);
 
+  // Set flag for error checking
+  erroneous_state = true;
+
+  // Do nothing when no commands are received
+  if(waiting_state == true) {
+    lcd.setCursor(4, 0);
+    lcd.print("Ready to");
+    lcd.setCursor(5, 1);
+    lcd.print("start!");
+
+    erroneous_state = false;
+  }
+
   // Receive start signal from master
   while(Serial1.available() && athleteRunning == false && stayIdle == false) {
     received = Serial1.read(); // Read data from Serial1 (antenna) to empty its buffer
@@ -95,10 +115,12 @@ void loop() {
       initialTime = millis();
       Serial.println("Started");
       athleteRunning = true;
+      waiting_state = false;
 
     }
     else if(received == 'f'){
       Serial.println("False Start");
+      waiting_state = false;
     }
     lcd.clear();
   }
@@ -127,11 +149,15 @@ void loop() {
   
       // Send time to bluetooth device and display it
       // Serial.println(totalTime);
+
+      erroneous_state = false;
     }
   
     if(photocellStatus == LOW && athleteRunning == true && finishLineReached == false) {
       finishLineReached = true;
       i = 0;
+
+      erroneous_state = false;
     }
   
     if(finishLineReached == true && i < nTimes) {
@@ -144,6 +170,8 @@ void loop() {
       if(i == nTimes) {
         acquisitionCompleted = true;
       }
+
+      erroneous_state = false;
     }
   
     if(acquisitionCompleted == true) {
@@ -199,8 +227,11 @@ void loop() {
       Serial1.begin(BAUDRATE);
       received = '\0';
       received_reaction = '\0';
+
+      erroneous_state = false;
     }
 
+    erroneous_state = false;
   }
   
   else if (received == 'f') {
@@ -209,9 +240,10 @@ void loop() {
     lcd.print("FALSE START!");
     stayIdle = true;
     received = '\0';
+
+    erroneous_state = false;
   }
   
-
   if(stayIdle == true) {
     for(t = 0; t < idleDuration; t++) {  // Display result for idleDuration seconds, then set timer to 0
       resetButtonStatus = digitalRead(resetButtonPin);
@@ -234,10 +266,30 @@ void loop() {
     Serial.println(readyMessage);
     
     stayIdle = false;
+    waiting_state = true;
     
     // Dump any start command received during the IDLE status
     while(Serial1.available()) {
       Serial1.read();
+    }
+
+    erroneous_state = false;
+  }
+
+  // Check if execution lands in erroneous state
+  if(erroneous_state == true) {
+    while(true) {
+      // Print ERROR message on LCD Display
+      lcd.clear();
+      lcd.setCursor(1, 0);
+      lcd.print("Connection Lost");
+      lcd.setCursor(2, 1);
+      lcd.print("Press |Reset|");
+
+      if (resetButtonStatus == HIGH) {  // Stop waiting if the reset button is pressed
+        erroneous_state = false;
+        break;
+      }
     }
   }
 }
