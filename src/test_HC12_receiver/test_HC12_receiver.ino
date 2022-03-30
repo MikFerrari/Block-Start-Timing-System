@@ -1,6 +1,6 @@
 void setup() {
-  Serial.begin(9600);             // Serial port to computer
-  Serial1.begin(9600);               // Serial port to HC12
+  Serial.begin(2400);             // Serial port to computer
+  Serial1.begin(2400);               // Serial port to HC12
 }
 
 void loop() {

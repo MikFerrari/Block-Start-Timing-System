@@ -19,7 +19,8 @@
 // #include "Sound_GUN.h"
 #include "Sound_GUN_short.h"
 
-#define BAUDRATE 9600
+#define BAUDRATE_SERIAL 2400
+#define BAUDRATE_HC12 2400
 
 // Variable declarations
 SoftwareSerial HC12(2, 12); // HC-12 TX Pin, HC-12 RX Pin
@@ -74,8 +75,8 @@ const int tone_FALSE = NOTE_C6;
 
 void setup() {
   // Initialise Serial communication and Radio Module
-  Serial.begin(BAUDRATE);
-  HC12.begin(BAUDRATE);
+  Serial.begin(BAUDRATE_SERIAL);
+  HC12.begin(BAUDRATE_HC12);
 
   // Declare pins as inputs
   pinMode(blockPin,INPUT);

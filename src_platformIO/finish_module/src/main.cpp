@@ -6,7 +6,9 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
 
-#define BAUDRATE 9600
+#define BAUDRATE_SERIAL 2400
+#define BAUDRATE_BLUETOOTH 9600
+#define BAUDRATE_HC12 2400
 
 // Variable declarations
 SoftwareSerial bluetooth(5, 4); // RX Pin, TX Pin
@@ -60,9 +62,9 @@ void setup() {
   lcd.begin(16, 2);
 
   // Initialise Serial communication, Radio Module and Bluetooth Module
-  Serial.begin(BAUDRATE);
-  bluetooth.begin(BAUDRATE);
-  Serial1.begin(BAUDRATE); // On Arduino Leonardo Pins 1 and 0 are used as TX and RX -> USE THIS INSTEAD OF HC12
+  Serial.begin(BAUDRATE_SERIAL);
+  bluetooth.begin(BAUDRATE_BLUETOOTH);
+  Serial1.begin(BAUDRATE_HC12); // On Arduino Leonardo Pins 1 and 0 are used as TX and RX -> USE THIS INSTEAD OF HC12
 
   // Declare starting block pin
   pinMode(photocellPin,INPUT);
@@ -226,7 +228,7 @@ void loop() {
       bluetooth.println(reaction_time,3); // 3 decimal digits
 
       // Reset
-      Serial1.begin(BAUDRATE);
+      Serial1.begin(BAUDRATE_HC12);
       received = '\0';
       received_reaction = '\0';
 
