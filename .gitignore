@@ -1,2 +1,4 @@
-# Ignore all mp4 files in this directory
+*.pdf
+*.jpg
+*.jpeg
 *.mp4
