@@ -28,8 +28,11 @@ bool waiting_state = true;
 
 float initialTime = 0;
 float totalTime = 0;
-int i = 0;
 float reaction_time = 0;
+
+int i = 0;
+int mins = 0;
+float secs = 0;
 
 char received;
 char received_reaction;
@@ -54,6 +57,56 @@ void serialFlush(){
   while(Serial.available() > 0) {
     char t = Serial.read();
   }
+}
+
+
+void printTime_lcd(float total_time, float reaction_time) {
+  lcd.setCursor(0, 0);
+  lcd.print("Time:");
+  if(total_time<10) {
+    lcd.setCursor(10, 0);
+    lcd.print("0");
+    lcd.setCursor(11, 0);
+    lcd.print(totalTime, 3);
+  } 
+  else if(total_time<60) {
+    lcd.setCursor(10, 0);
+    lcd.print(total_time, 3);
+  }
+  else {
+    mins = (int)total_time/60;
+    secs = total_time-mins*60;
+
+    if(mins<10) {
+      lcd.setCursor(7, 0);
+      lcd.print("0");
+      lcd.setCursor(8, 0);
+      lcd.print(mins); 
+    }
+    else {
+      lcd.setCursor(7, 0);
+      lcd.print(mins);
+    }
+    lcd.setCursor(9, 0);
+    lcd.print(":");
+
+    if(secs<10) {
+      lcd.setCursor(10, 0);
+      lcd.print("0");
+      lcd.setCursor(11, 0);
+      lcd.print(secs, 3); 
+    }
+    else {
+      lcd.setCursor(10, 0);
+      lcd.print(secs, 3);
+    }  
+  }
+  lcd.setCursor(0, 1);
+  lcd.print("Reaction:");
+  lcd.setCursor(10, 1);
+  lcd.print(reaction_time, 3);
+  lcd.setCursor(15, 1);
+  lcd.print("s");
 }
 
 
@@ -88,6 +141,12 @@ void setup() {
   char readyMessage[17] = "Ready to start!";
   Serial.println(readyMessage);
   bluetooth.println(readyMessage);
+
+  // Print on LCD Display 
+  lcd.setCursor(4, 0);
+  lcd.print("Ready to");
+  lcd.setCursor(5, 1);
+  lcd.print("start!");
 }
 
 
@@ -100,19 +159,14 @@ void loop() {
   erroneous_state = true;
 
   // Do nothing when no commands are received
-  if(waiting_state == true) {
-    lcd.setCursor(4, 0);
-    lcd.print("Ready to");
-    lcd.setCursor(5, 1);
-    lcd.print("start!");
-
+  if(waiting_state == true)
     erroneous_state = false;
-  }
 
   // Receive start signal from master
   while(Serial1.available() && athleteRunning == false && stayIdle == false) {
     received = Serial1.read(); // Read data from Serial1 (antenna) to empty its buffer
     Serial.println(received); // debug
+    lcd.clear();
     if(received == 's') {
       initialTime = millis();
       Serial.println("Started");
@@ -126,7 +180,6 @@ void loop() {
       bluetooth.println("False Start");
       waiting_state = false;
     }
-    lcd.clear();
   }
 
   if(received == 's' && stayIdle == false) {
@@ -142,14 +195,7 @@ void loop() {
     if(photocellStatus == HIGH && athleteRunning == true && finishLineReached == false) {
       totalTime = (millis() - initialTime)/1000;
       // Print time on LCD Display  
-      lcd.setCursor(0, 0);
-      lcd.print("Time:");
-      lcd.setCursor(7, 0);
-      lcd.print(totalTime, 3);
-      lcd.setCursor(0, 1);
-      lcd.print("Reaction:");
-      lcd.setCursor(11, 1);
-      lcd.print(reaction_time, 3);
+      printTime_lcd(totalTime,reaction_time);
 
       erroneous_state = false;
     }
@@ -196,15 +242,8 @@ void loop() {
         }
       }
         
-      // Print time on LCD Display  
-      lcd.setCursor(0, 0);
-      lcd.print("Time:");
-      lcd.setCursor(7, 0);
-      lcd.print(times[maxIdx], 3);
-      lcd.setCursor(0, 1);
-      lcd.print("Reaction:");
-      lcd.setCursor(11, 1);
-      lcd.print(reaction_time, 3);
+      // Print time on LCD Display
+      printTime_lcd(times[maxIdx],reaction_time);
       
       // Serial.println(times[maxIdx]); // For debugging
       // Serial.println(maxCount); // For debugging
@@ -253,13 +292,12 @@ void loop() {
       resetButtonStatus = digitalRead(resetButtonPin);
       // Serial.println(resetButtonStatus); // debug
       delay(1);
-      if (resetButtonStatus == HIGH) {  // Stop waiting if the reset button is pressed
-        break;
-      }
+      if (resetButtonStatus == HIGH)  // Stop waiting if the reset button is pressed
+        break;       
     }
     
-    // Print time on LCD Display  
-    lcd.clear();
+    // Print waiting message on LCD Display 
+    lcd.clear(); 
     lcd.setCursor(4, 0);
     lcd.print("Ready to");
     lcd.setCursor(5, 1);

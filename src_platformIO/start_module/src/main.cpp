@@ -120,13 +120,13 @@ void loop() {
       }
       else {        
         // START command
-        HC12.write('s'); // Timer starts when the pistol is triggered
+        // tone(buzzer_pin,tone_GUN,duration_GUN); // Using buzzer
+        startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker
+        HC12.write('s'); // Timer starts once the sound of the pistol has been played
         Serial.println('s'); // debug
         reaction_time = millis();
         gun_fired = true;
         start_command = false;
-        // tone(buzzer_pin,tone_GUN,duration_GUN); // Using buzzer
-        startPlayback(sounddata_data_GUN, sizeof(sounddata_data_GUN)); // Using speaker
       }
     }
   }
@@ -155,6 +155,7 @@ void loop() {
       HC12.write('t'); // Tell the finish module that the athlete has left the block,
                        // so that it can compute the reaction time as well
       Serial.println(reaction_time,3); // debug
+      delay(3000); // to prevent immediate false start after correct start due to pressure plate elasticity
     }
     else {
       HC12.write('f');
